@@ -1,0 +1,4 @@
+Okay so anyways we need to plan out the flow of things here, erm...
+- Check for webhooks
+  - If no webhooks- make them
+  - If there is
