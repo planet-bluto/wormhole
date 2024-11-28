@@ -32,14 +32,15 @@ client.on("ready", async () => {
       wormholeDict[otherChannel.id] = wormholeWebhook
     })
 
-    let messageDict: {[messageId: string]: {id: string, url: string, author: string, content: string}} = {}
-    let inverseMessageDict: {[messageId: string]: {id: string, url: string, author: string, content: string}} = {}
+    let messageDict: {[messageId: string]: {id: string, channelId: string, url: string, author: string, content: string}} = {}
+    let inverseMessageDict: {[messageId: string]: {id: string, channelId: string, url: string, author: string, content: string}} = {}
 
     function createDictMessage(message: Message) {
       return {
         id: message.id,
+        channelId: message.channelId,
         url: message.url,
-        author: message.author.displayName,
+        author: `${message.author.displayName} (@${message.author.username})`,
         content: message.content
       }
     }
@@ -123,6 +124,55 @@ client.on("ready", async () => {
 
         wormholeWebhook.editMessage(wormholeMessageId, payload)
       }
+    })
+
+    client.on("messageDelete", async (message) => {
+      let isMain = Object.keys(messageDict).includes(message.id)
+      let isInverse = Object.keys(inverseMessageDict).includes(message.id)
+      let isValid = (isMain || isInverse)
+
+      if (!isValid) { return }
+
+      let thisDict = (isMain ? messageDict : inverseMessageDict)
+      let otherDict = (isMain ? inverseMessageDict : messageDict)
+
+      let otherLiteMessage = thisDict[message.id]
+      
+      if (isMain) {
+        let wormholeWebhook = wormholeDict[message.channelId]
+        try {
+          wormholeWebhook.deleteMessage(otherLiteMessage.id)
+        } catch(err) {
+          print("Error Trying to delete message", err)
+        }
+      } else {
+        try {
+          let channel = await client.channels.fetch(otherLiteMessage.channelId)
+          if (channel instanceof TextChannel) {
+            channel.messages.delete(otherLiteMessage.id)
+          }
+        } catch(err) {
+          print("Error Trying to delete message", err)
+        }
+      }
+
+      if (isMain) {
+        delete messageDict[message.id]
+        delete inverseMessageDict[otherLiteMessage.id]
+      } else {
+        delete messageDict[otherLiteMessage.id]
+        delete inverseMessageDict[message.id]
+      }
+
+      // Give me a sec.
+
+      // let wormholeMessageId = messageDict[message.id].id
+      // let wormholeWebhook = wormholeDict[message.channelId]
+      
+      // wormholeWebhook.deleteMessage(wormholeMessageId)
+
+      // delete messageDict[message.id]
+      // delete inverseMessageDict[wormholeMessageId]
     })
   }
 })
