@@ -89,7 +89,8 @@ client.on("ready", async () => {
 
         if (wormholeLiteMessage) {
           if (!payload.embeds) { payload.embeds = [] }
-          payload.content = (`-# [**[↺ Reply]** ${wormholeLiteMessage.author}: ${wormholeLiteMessage.content.slice(0, 30)}...](${wormholeLiteMessage.url})` + "\n\n" + payload.content)
+          let replyContent = wormholeLiteMessage.content.split(" ").map(bit => ((bit.startsWith("https://") || bit.startsWith("http://")) ? "[LINK]" : bit)).join(" ")
+          payload.content = (`-# [**[↺ Reply]** ${wormholeLiteMessage.author}: ${replyContent.slice(0, 50)}...](${wormholeLiteMessage.url})` + "\n\n" + payload.content)
           // payload.embeds.push({
           //   "author": {
           //     "name": `${wormholeLiteMessage.author}: ${wormholeLiteMessage.content.slice(0, 10)}`,

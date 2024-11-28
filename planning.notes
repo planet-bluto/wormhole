@@ -5,6 +5,7 @@
 [√] Nitro Emojis
  - Only handle emotes OUTSIDE of the two servers
  - DiscordFreeEmojis save me...
+[ ] Turn links into '[LINK]' in reply indicators
 [ ] Reaction Notifications
   - I think either sending a new webhook message that's just an embed saying someone reacted to a message 
   - OR editing the message to include the embed that shows reaction counts from the other server
