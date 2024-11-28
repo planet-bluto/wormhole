@@ -1,4 +1,4 @@
-import { TextChannel, Webhook, WebhookMessageCreateOptions } from "discord.js"
+import { Message, MessageType, parseEmoji, PartialEmoji, TextChannel, Webhook, WebhookMessageCreateOptions } from "discord.js"
 import {client} from "./bot"
 
 let wormholeDict: {[index: string]: Webhook} = {}
@@ -32,20 +32,96 @@ client.on("ready", async () => {
       wormholeDict[otherChannel.id] = wormholeWebhook
     })
 
-    client.on("messageCreate", (message) => {
-      if (message.webhookId == null && Object.keys(wormholeDict).includes(message.channelId)) {
+    let messageDict: {[messageId: string]: {id: string, url: string, author: string, content: string}} = {}
+    let inverseMessageDict: {[messageId: string]: {id: string, url: string, author: string, content: string}} = {}
+
+    function createDictMessage(message: Message) {
+      return {
+        id: message.id,
+        url: message.url,
+        author: message.author.displayName,
+        content: message.content
+      }
+    }
+
+    async function createMessagePayload(message: Message) {
+      let payload: any = {
+        content: message.content,
+        username: (message.member?.displayName || message.author.displayName),
+        files: message.attachments.toJSON()
+      }
+      let msgAuthorAvatarURL = (message.member?.displayAvatarURL() || message.author.displayAvatarURL())
+      if (msgAuthorAvatarURL) { payload['avatarURL'] = msgAuthorAvatarURL }
+
+      // Emojis
+      print(message.content)
+      let thisContent = message.content
+      await thisContent.split(" ").awaitForEach((bit: string) => {
+        let emoji: any = parseEmoji(bit)
+        if (emoji && emoji.id) {
+          if (!client.emojis.cache.has(emoji.id)) {
+            emoji["url"] = `https://cdn.discordapp.com/emojis/${emoji.id}.webp?size=64`
+  
+            if (emoji) {
+              thisContent = thisContent.replace(`<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`, `[⠀](${emoji.url})`);
+            }
+          }
+        }
+      })
+
+      payload.content = thisContent
+
+      // Stickers
+      print(payload.files)
+      payload.files = payload.files.concat(message.stickers.map(sticker => `https://media.discordapp.net/stickers/${sticker.id}.webp?size=160&quality=lossless`))
+
+      if (message.type == MessageType.Reply) {
+        let replyMessage = await message.fetchReference()
+
+        let wormholeLiteMessage = (messageDict[replyMessage.id] || inverseMessageDict[replyMessage.id])
+
+        if (wormholeLiteMessage) {
+          if (!payload.embeds) { payload.embeds = [] }
+          payload.content = (`-# [**[↺ Reply]** ${wormholeLiteMessage.author}: ${wormholeLiteMessage.content.slice(0, 30)}...](${wormholeLiteMessage.url})` + "\n\n" + payload.content)
+          // payload.embeds.push({
+          //   "author": {
+          //     "name": `${wormholeLiteMessage.author}: ${wormholeLiteMessage.content.slice(0, 10)}`,
+          //     "url": wormholeLiteMessage.url,
+          //     "icon_url": "https://i.imgur.com/x8BoMRM.png"
+          //   }
+          // })
+        }
+      }
+
+      return payload
+    }
+
+    client.on("messageCreate", async (message) => {
+      if ([MessageType.Default, MessageType.Reply].includes(message.type) && message.webhookId == null && Object.keys(wormholeDict).includes(message.channelId)) {
         let wormholeWebhook = wormholeDict[message.channelId]
 
-        let payload: WebhookMessageCreateOptions = {
-          content: message.content,
-          username: message.author.displayName,
-          files: message.attachments.toJSON()
-        }
-        let msgAuthorAvatarURL = message.author.displayAvatarURL()
-        if (msgAuthorAvatarURL) { payload['avatarURL'] = msgAuthorAvatarURL }
+        let payload = await createMessagePayload(message)
         
+        try {
+          let wormholeMessage = await wormholeWebhook.send(payload)
 
-        wormholeWebhook.send(payload)
+          messageDict[message.id] = createDictMessage(wormholeMessage)
+          inverseMessageDict[wormholeMessage.id] = createDictMessage(message)
+        } catch(err) {
+          wormholeWebhook.send(`\`\`\`diff\n- Error: idk what happened, blame ${message.member?.nickname || message.author.displayName} (@${message.author.username})\`\`\`\n\`\`\`js\n${err}\`\`\``)
+        }
+      }
+    })
+
+    client.on("messageUpdate", async (oldMessage, message) => {
+      if (Object.keys(messageDict).includes(oldMessage.id) && message instanceof Message) {
+        let wormholeMessageId = messageDict[oldMessage.id].id
+        
+        let wormholeWebhook = wormholeDict[message.channelId]
+
+        let payload = await createMessagePayload(message)
+
+        wormholeWebhook.editMessage(wormholeMessageId, payload)
       }
     })
   }

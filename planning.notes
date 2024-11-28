@@ -1,4 +1,13 @@
-Okay so anyways we need to plan out the flow of things here, erm...
-- Check for webhooks
-  - If no webhooks- make them
-  - If there is
+//√
+[√] Editing Messages
+[√] Reply Indicator
+  - hmm
+[√] Nitro Emojis
+ - Only handle emotes OUTSIDE of the two servers
+ - DiscordFreeEmojis save me...
+[ ] Reaction Notifications
+  - I think either sending a new webhook message that's just an embed saying someone reacted to a message 
+  - OR editing the message to include the embed that shows reaction counts from the other server
+
+
+[ ] And then actually deploy it with the BlutoPI Control Panel...
