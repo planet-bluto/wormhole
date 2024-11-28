@@ -112,8 +112,8 @@ client.on("ready", async () => {
         try {
           let wormholeMessage = await wormholeWebhook.send(payload)
 
-          messageDict[message.id] = createDictMessage(wormholeMessage)
           inverseMessageDict[wormholeMessage.id] = createDictMessage(message)
+          messageDict[message.id] = createDictMessage(wormholeMessage)
         } catch(err) {
           wormholeWebhook.send(`\`\`\`diff\n- Error: idk what happened, blame ${message.member?.nickname || message.author.displayName} (@${message.author.username})\`\`\`\n\`\`\`js\n${err}\`\`\``)
         }
