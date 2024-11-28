@@ -36,11 +36,17 @@ client.on("ready", async () => {
     let inverseMessageDict: {[messageId: string]: {id: string, channelId: string, url: string, author: string, content: string}} = {}
 
     function createDictMessage(message: Message) {
+      let author = `${message.author.displayName} (@${message.author.username})`
+      if (Object.keys(inverseMessageDict).includes(message.id)) {
+        let ogMessage = inverseMessageDict[message.id]
+        author = ogMessage.author
+      }
+
       return {
         id: message.id,
         channelId: message.channelId,
         url: message.url,
-        author: `${message.author.displayName} (@${message.author.username})`,
+        author,
         content: message.content
       }
     }
