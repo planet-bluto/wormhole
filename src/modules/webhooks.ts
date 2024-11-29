@@ -61,13 +61,12 @@ client.on("ready", async () => {
       if (msgAuthorAvatarURL) { payload['avatarURL'] = msgAuthorAvatarURL }
 
       // Emojis
-      print(message.content)
       let thisContent = message.content
       await thisContent.split(" ").awaitForEach((bit: string) => {
         let emoji: any = parseEmoji(bit)
         if (emoji && emoji.id) {
           if (!client.emojis.cache.has(emoji.id)) {
-            emoji["url"] = `https://cdn.discordapp.com/emojis/${emoji.id}.webp?size=64`
+            emoji["url"] = `https://cdn.discordapp.com/emojis/${emoji.id}.webp?size=48`
   
             if (emoji) {
               thisContent = thisContent.replace(`<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`, `[⠀](${emoji.url})`);
@@ -79,7 +78,6 @@ client.on("ready", async () => {
       payload.content = thisContent
 
       // Stickers
-      print(payload.files)
       payload.files = payload.files.concat(message.stickers.map(sticker => `https://media.discordapp.net/stickers/${sticker.id}.webp?size=160&quality=lossless`))
 
       if (message.type == MessageType.Reply) {

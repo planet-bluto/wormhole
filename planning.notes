@@ -1,7 +1,7 @@
 //√
 [√] Editing Messages
-[√] Reply Indicator
-  - hmm
+[-] Reply Indicator
+  - Account for the 
 [√] Nitro Emojis
  - Only handle emotes OUTSIDE of the two servers
  - DiscordFreeEmojis save me...
@@ -9,6 +9,8 @@
 [ ] Reaction Notifications
   - I think either sending a new webhook message that's just an embed saying someone reacted to a message 
   - OR editing the message to include the embed that shows reaction counts from the other server
-
+[ ] Prevent Double Pinging
+  - Check the mentions then if that person is in both servers then escape that ping on the wormhole'd message
+[ ] And then also ping replies (that do ping if you can check for that)
 
 [ ] And then actually deploy it with the BlutoPI Control Panel...
